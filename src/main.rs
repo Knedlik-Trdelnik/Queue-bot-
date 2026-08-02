@@ -148,7 +148,7 @@ async fn action(bot: Bot, msg: Message, cmd: Command) -> ResponseResult<()> {
             /swap [число] - предложить свапнуться со студнем на месте [чиcло]\n\
             /ban - [только для админов] [юзернейм] без @ - забанить зарегистрированного))))\n\
             /unban - [только для админов] [юзернем] без @))))\n\
-            /del [число] - выкинуть и удалить человека (у которога в очереди [число] место) из зарегестрированных пользователей\n
+            /del [число] - выкинуть и удалить человека (у которога в очереди [число] место) из зарегестрированных пользователей\n\
             /help - ну...блин)").await?;
             let sticker_id = FileId(
                 "CAACAgIAAxkBAAIG12opX911iwkw7Xaqk3FCqak_OdosAALBaAAC956BScJug_m8nC63OwQ"
@@ -613,11 +613,26 @@ async fn is_user_admin(id: &ChatId) -> bool {
 }
 
 async fn del(bot: Bot, msg: Message, index: usize) -> ResponseResult<()> {
+    if !is_user_admin(&msg.chat.id).await {
+        bot.send_message(msg.chat.id, "Эй, ты не админ...фу...")
+            .await?;
+        let sticker_id = FileId(String::from(
+            "CAACAgIAAxkBAAIHJmopa6re4q_lDaO9HvW5nLL4MbzHAAKTeQACnfhwSG3etcvVolCMOwQ",
+        ));
+        bot.send_sticker(msg.chat.id, InputFile::file_id(sticker_id))
+            .await?;
+        return Ok(());
+    };
     let mut map = STUDENTS.write().await;
     let mut q = QUEUE.write().await;
+    if index < q.len() {
+        map.remove(&q[index]);
+        q.remove(index);
+        bot.send_message( msg.chat.id,"Отправлен в пекло!").await?;
 
-    map.remove(&q[index]);
-    q.remove(index);
-    bot.send_message( msg.chat.id,"Отправлен в пекло!").await?;
+    } else {
+        bot.send_message(msg.chat.id,"Алоооо, почему пишем несуществующие индексы?").await?;
+    }
     Ok(())
+
 }
