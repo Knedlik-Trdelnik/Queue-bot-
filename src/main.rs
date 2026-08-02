@@ -1,12 +1,12 @@
 use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::sync::LazyLock;
 use teloxide::types::FileId;
 use teloxide::types::InputFile;
 use teloxide::{prelude::*, utils::command::BotCommands};
 use tokio::fs;
-use tokio::sync::{RwLock};
+use tokio::sync::RwLock;
 use toml::Table;
 
 #[derive(Serialize, Deserialize)]
@@ -14,7 +14,6 @@ struct User {
     chat_id: ChatId,
     name: String,
     username: String,
-    is_admin: bool,
     swap_pos: usize,
 }
 
@@ -226,7 +225,6 @@ async fn add_me(bot: Bot, msg: Message) -> ResponseResult<()> {
                 .as_ref()
                 .unwrap()
                 .clone(),
-            is_admin: false,
             swap_pos: usize::MAX,
         };
         map.insert(msg.chat.id, student);
@@ -471,9 +469,9 @@ async fn ban(bot: Bot, msg: Message, user_name: String) -> ResponseResult<()> {
                 return Ok(());
             }
             {
-            let mut prisoners = BANNED.write().await;
-            let students = STUDENTS.read().await;
-            prisoners.insert(id, students.get(&id).unwrap().username.clone());
+                let mut prisoners = BANNED.write().await;
+                let students = STUDENTS.read().await;
+                prisoners.insert(id, students.get(&id).unwrap().username.clone());
             }
             delete_user(id).await;
             bot.send_message(msg.chat.id, "Забанен!").await?;
@@ -628,11 +626,10 @@ async fn del(bot: Bot, msg: Message, index: usize) -> ResponseResult<()> {
     if index < q.len() {
         map.remove(&q[index]);
         q.remove(index);
-        bot.send_message( msg.chat.id,"Отправлен в пекло!").await?;
-
+        bot.send_message(msg.chat.id, "Отправлен в пекло!").await?;
     } else {
-        bot.send_message(msg.chat.id,"Алоооо, почему пишем несуществующие индексы?").await?;
+        bot.send_message(msg.chat.id, "Алоооо, почему пишем несуществующие индексы?")
+            .await?;
     }
     Ok(())
-
 }

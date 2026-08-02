@@ -4,6 +4,5 @@ limit = 35 #any >= 0
 chat_id = 1
 name = "A"
 username = "B" #TG username without @
-is_admin = true
 swap_pos = 0
 
