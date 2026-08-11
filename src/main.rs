@@ -62,7 +62,7 @@ async fn main() {
     //$env:RUST_LOG="info"
 
     parse_and_init().await;
-    let bot = Bot::new("8614445911:AAFIeVsMavyS3U3H_Ktl-tsP0Dzagb-8AXk");
+    let bot = Bot::from_env();
     /**/
     Command::repl(bot, action).await;
 
