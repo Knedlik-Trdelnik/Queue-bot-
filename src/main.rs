@@ -1,11 +1,14 @@
-use rand::seq::SliceRandom;
+use rand::seq::{IndexedRandom, SliceRandom};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::LazyLock;
+use log::info;
 use teloxide::types::FileId;
 use teloxide::types::InputFile;
 use teloxide::{prelude::*, utils::command::BotCommands};
+use teloxide::dispatching::UpdateHandler;
 use tokio::fs;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::sync::RwLock;
 use toml::Table;
 
@@ -62,6 +65,7 @@ async fn main() {
     let bot = Bot::from_env();
     /**/
     Command::repl(bot, action).await;
+
 
     /*
         teloxide::repl(bot, |bot: Bot, msg: Message| async move {
@@ -240,6 +244,7 @@ async fn add_me(bot: Bot, msg: Message) -> ResponseResult<()> {
     }
     bot.send_message(msg.chat.id, "Done (добавлен в конец очереди)")
         .await?;
+
     Ok(())
 }
 
@@ -412,15 +417,45 @@ async fn show_queue(bot: Bot, msg: Message) -> ResponseResult<()> {
         }
         res
     };
-
+    let file_id;
+    if a == "Очередь пуста" {
+        file_id = FileId::from("CAACAgIAAxkBAAEGFdFqehzcvUVj99Wl2AoxAsB30tczTgAChaIAAkuC2Et-s1rh-1N0Uj0E");
+    }
+    else{
+        let chat_id = msg.chat.id;
+        let vec = QUEUE.read().await;
+        let first = ["CAACAgIAAxkBAAEGFcNqehzOhBTRjs3zsNbWDFPd-BmOrwACeqUAAkIk0UvP3AQuIv8ONT0E",
+        "CAACAgIAAxkBAAEGFc1qehzauTiaWS9IveHl0R43jiLfgAACNqgAAvlZ0UuH-x8UAgN1Ij0E"];
+        let second = ["CAACAgIAAxkBAAEGFcdqehzU2eQfGA-KcrTDFvovWTbfBwACragAAmTH0EsGpKQWVYIcwD0E",
+        "CAACAgIAAxkBAAEGFdVqeh0-1MvSf9yS5jZS6AzZyVYargACQ6sAAtJ-0EuyBrITYtte0z0E"];
+        let third = ["CAACAgIAAxkBAAEGFclqehzXEbC6s8SzrstD_R5XTcec3gACh6MAAvs20EsTG43RZ7vg9j0E",
+        "CAACAgIAAxkBAAEGFcVqehzRV5Wb8gppv5d4uAowTHyjqwACVq0AArHA0Utbn-koKCNyqT0E"];
+        let fourth = ["CAACAgIAAxkBAAEGFctqehzZsHzytrBna1K_MH_2nqyi2gACtqQAAhV_0Eu5vKwXWOV3dj0E"];
+        let fifth = ["CAACAgIAAxkBAAEGFc9qehzbNvZJIDLu9Yjng9ZhmgZD4gACZ58AAiMx0Ev-O-9kxCWDsz0E"];
+        let selected_list: &[&str] = match vec.iter().position(|id| *id == chat_id) {
+            Some(0) => &first,   // Первое место в очереди
+            Some(1) => &second,
+            Some(2) => &third,
+            Some(3) => &fourth,
+            Some(4) => &fifth,
+            _ => &["CAACAgEAAxkBAAEGGHtqeuqDTgVo-ijTNGyCvkqkTRHjeAACfQQAAg-CwUfkFNcioKNKQD0E",
+            "CAACAgIAAxkBAAEGGH9qeurBW5WA27UqFjvYnqy06nynrwACfqQAAh8V2EvTU2nxJQnIVj0E"]
+        };
+        file_id = FileId::from(selected_list
+            .choose(&mut rand::rng())
+            .unwrap()
+            .to_string()
+        );
+    }
     bot.send_message(msg.chat.id, a).await?;
-    let sticker_id = FileId(
-        "CAACAgIAAxkBAAIHx2opid3IJDQu2k8Mas6T8St7a4TJAALjZAACN0N4SKETlfOjuuUZOwQ".to_string(),
-    );
-
-    bot.send_sticker(msg.chat.id, InputFile::file_id(sticker_id))
-        .await?;
+    bot.send_sticker(msg.chat.id, InputFile::file_id(file_id)).await?;
     Ok(())
+
+    // let sticker_id = FileId(
+    //     "CAACAgIAAxkBAAIHx2opid3IJDQu2k8Mas6T8St7a4TJAALjZAACN0N4SKETlfOjuuUZOwQ".to_string(),
+    // );
+
+
 }
 
 //поступает на вход @name
